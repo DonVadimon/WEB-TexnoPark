@@ -20,7 +20,7 @@ from app import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),
-    path('ask/', views.ask_question, name='ask_question'),
+    path('ask/', views.ask_question, name='ask'),
     path('question/<int:id>/', views.answers, name='answers'),
     path('tag/<slug:tag>/', views.tag_questions, name='tag'),
     path('settings/', views.settings, name='settings'),
