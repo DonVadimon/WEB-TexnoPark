@@ -17,9 +17,11 @@ Login
 <div class="jumbotron jumbotron-fluid bg-error">
     <div class="container">
         <ul>
+            {% for e in errors %}
             <li>
-                <p class="text-center">Incorrect login</p>
+                <p class="text-center">{{ e }}</p>
             </li>
+            {% endfor %}
         </ul>
     </div>
 </div>
@@ -36,6 +38,6 @@ Login
     <button type="submit" class="btn btn-success">Login</button>
 </form>
 <div class="text-center w-100 mt-5">
-    <a href="#">create new account</a>
+    <a href="{% url 'register' %}">create new account</a>
 </div>
 {% endblock content %}

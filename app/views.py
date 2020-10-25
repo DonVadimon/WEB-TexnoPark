@@ -13,6 +13,14 @@ questions = [
     } for idx in range(5)
 ]
 
+tags = [
+    'dJango',
+    'Python',
+    'Mail.ru',
+    'Texnopark',
+    'PHP',
+]
+
 def index(request):
     #Index page
     context = {
@@ -22,7 +30,10 @@ def index(request):
 
 def ask_question(request):
     #Page for create new Question
-    return render(request, 'create_question.html', {})
+    context = {
+        'tags' : tags,
+    }
+    return render(request, 'create_question.html', context)
 
 def answers(request, id):
     #Page with answers on current question
@@ -43,13 +54,27 @@ def tag_questions(request, tag):
 
     return render(request, 'tag_questions.html', context)
 
+user = {
+    'login' : 'Vadim',
+    'email' : 'vadim@gmail.com',
+    'nickname' : 'DonVadimon',
+}
+
 def settings(request):
     #Page with user's settings
-    return render(request, 'settings.html', {})
+    context = {
+        'user' : user,
+    }
+    return render(request, 'settings.html', context)
+
+errors = ['Incorrect login', 'Wrong password']
 
 def login(request):
     #Page for login in site
-    return render(request, 'login.html', {})
+    context = {
+        'errors' : errors,
+    }
+    return render(request, 'login.html', context)
 
 def register(request):
     #Page for registration
