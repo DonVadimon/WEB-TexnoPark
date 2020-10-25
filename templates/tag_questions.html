@@ -14,11 +14,12 @@ Tag #Django
 
 {% block content %}
 <div class="container text-center mt-3">
-  <h1>#Django</h1>
+  <h1>#{{ tag }}</h1>
 </div>
 
 <div class="questions">
 
+  {% for q in tag_questions %}
   <div class="card mb-3 question">
     <div class="row no-gutters">
       <div class="col-md-4">
@@ -26,7 +27,7 @@ Tag #Django
         <div class="row scores">
 
           <div class="post-score align-self-center">
-            <h4>5</h4>
+            <h4>{{ q.score }}</h4>
           </div>
           <form action="#" method="POST">
             <div class="d-flex flex-row justify-content-center answer-score">
@@ -48,13 +49,11 @@ Tag #Django
       </div>
       <div class="col">
         <div class="card-body">
-          <a href="#">
-            <h5 class="card-title">Question about dJango</h5>
+          <a href="{% url 'answers' 1 %}">
+            <h5 class="card-title">{{ q.title }}</h5>
           </a>
           <p class="card-text question-text">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam aliquid dignissimos
-            repudiandae sint, porro dolores, qui quod cumque dolorem. Id recusandae hic a quae illo excepturi
-            quia similique
+            {{ q.text }}
           </p>
           <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
         </div>
@@ -69,8 +68,9 @@ Tag #Django
                 <h5 class="mx-2">Tags:</h5>
               </div>
               <div class="col d-flex flex-column flex-md-row">
-                <a class="mx-2" href="#">dJango</a>
-                <a class="mx-2" href="#">Python</a>
+                {% for t in q.tags %}
+                <a class="mx-2" href="{% url 'tag' t %}">{{ t }}</a>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -79,6 +79,7 @@ Tag #Django
       </div>
     </div>
   </div>
+  {% endfor %}
 </div>
 {% include 'inc/pagination.html' %}
 {% endblock content %}

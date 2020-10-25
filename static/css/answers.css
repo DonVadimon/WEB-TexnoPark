@@ -29,4 +29,5 @@
 .question-score h4 {
     width: 100%;
     text-align: center;
+    margin: 0;
 }

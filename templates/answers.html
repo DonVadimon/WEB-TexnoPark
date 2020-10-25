@@ -23,7 +23,7 @@ Answers
                 <div class="d-flex flex-row justify-content-around w-50 w-md-100 align-self-center mt-4">
 
                     <div class="question-score align-self-center">
-                        <h4>5</h4>
+                        <h4>{{ question.score }}</h4>
                     </div>
                     <form action="#" method="post">
                         <div class="btn-group-vertical" role="group">
@@ -46,25 +46,17 @@ Answers
 
             </div>
             <div class="col-md-8">
-                <h1 class="display-4">Question about Django</h1>
-                <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae,
-                    excepturi officia. Provident sed quibusdam eaque. Magnam, recusandae. Commodi nam
-                    quis rerum dolor doloremque, necessitatibus fugit consectetur id laudantium eum modi
-                    velit. Temporibus, nesciunt. Eius aliquam culpa neque molestiae optio perferendis
-                    voluptas illum voluptatibus quisquam labore error veritatis, praesentium repudiandae
-                    totam beatae, adipisci, ullam minus quo id ratione similique. Amet in doloribus,
-                    accusamus obcaecati quaerat enim, quae aut debitis minus voluptatem accusantium
-                    temporibus. Sequi eum veritatis atque eaque nemo corrupti, hic quis non officia
-                    iusto omnis porro recusandae et, sapiente ad aut quos ipsum odio? Temporibus
-                    blanditiis enim omnis facere asperiores.</p>
+                <h1 class="display-4">{{ question.title }}</h1>
+                <p class="lead">{{ question.text }}</p>
                 <hr class="my-4">
                 <div class="row d-flex flex-row mb-3">
                     <div class="col-md-2">
                         <h5 class="mx-2">Tags:</h5>
                     </div>
                     <div class="col-md-10 d-flex flex-column flex-md-row justify-content-start">
-                        <a class="mx-1" href="#">dJango</a>
-                        <a class="mx-1" href="#">Python</a>
+                        {% for t in question.tags %}
+                        <a class="mx-1" href="{% url 'tag' t %}">{{ t }}</a>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

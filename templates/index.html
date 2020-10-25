@@ -15,7 +15,7 @@ Index Page
 {% block content %}
 <!-- Page Content -->
 <div class="questions">
-
+  {% for q in questions %}
   <div class="card mb-3 question">
     <div class="row no-gutters">
       <div class="col-md-4">
@@ -23,7 +23,7 @@ Index Page
         <div class="row scores">
 
           <div class="post-score align-self-center">
-            <h4>5</h4>
+            <h4>{{ q.score }}</h4>
           </div>
           <form action="#" method="POST">
             <div class="d-flex flex-row justify-content-center answer-score">
@@ -46,20 +46,18 @@ Index Page
       </div>
       <div class="col">
         <div class="card-body">
-          <a href="#">
-            <h5 class="card-title">Question about dJango</h5>
+          <a href="{% url 'answers' q.id %}">
+            <h5 class="card-title">{{ q.title }}</h5>
           </a>
           <p class="card-text question-text">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam aliquid dignissimos
-            repudiandae sint, porro dolores, qui quod cumque dolorem. Id recusandae hic a quae illo excepturi
-            quia similique
+            {{ q.text }}
           </p>
           <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
         </div>
 
         <div class="row d-flex flex-row justify-content-around px-3 px-md-5 pb-3">
           <div class="col ans-link">
-            <a href="#" class="btn btn-outline-success">
+            <a href="{% url 'answers' q.id %}" class="btn btn-outline-success">
               Answer (3)
             </a>
           </div>
@@ -69,8 +67,9 @@ Index Page
                 <h5 class="mx-2">Tags:</h5>
               </div>
               <div class="col d-flex flex-column flex-md-row">
-                <a class="mx-2" href="#">dJango</a>
-                <a class="mx-2" href="#">Python</a>
+                {% for t in q.tags %}
+                <a class="mx-2" href="{% url 'tag' t %}">{{ t }}</a>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -79,6 +78,7 @@ Index Page
       </div>
     </div>
   </div>
+  {% endfor %}
 </div>
 {% endblock content %}
 
