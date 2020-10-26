@@ -15,7 +15,7 @@ Index Page
 {% block content %}
 <!-- Page Content -->
 <div class="questions">
-  {% for q in questions %}
+  {% for q in page_obj %}
   <div class="card mb-3 question">
     <div class="row no-gutters">
       <div class="col-md-4">
@@ -83,6 +83,5 @@ Index Page
 {% endblock content %}
 
 {% block pagination %}
-<!-- Pagination -->
 {% include 'inc/pagination.html' %}
 {% endblock pagination %}

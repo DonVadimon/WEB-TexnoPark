@@ -3,12 +3,9 @@
     <h3 class="text-center">Popular Tags</h3>
     <hr>
     <ul>
-        <li><a href="#" class="sidebar-link">Perl</a></li>
-        <li><a href="#" class="sidebar-link">Python</a></li>
-        <li><a href="#" class="sidebar-link">TechnoPark</a></li>
-        <li><a href="#" class="sidebar-link">MySQL</a></li>
-        <li><a href="#" class="sidebar-link">dJango</a></li>
-        <li><a href="#" class="sidebar-link">Mail.ru</a></li>
+        {% for t in all_tags %}
+        <li><a href="{% url 'tag' t %}" class="sidebar-link">{{ t }}</a></li>
+        {% endfor %}
     </ul>
     <h3 class="text-center">Best Members</h3>
     <hr>
