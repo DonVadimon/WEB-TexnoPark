@@ -57,10 +57,21 @@ def ask_question(request):
     return render(request, 'create_question.html', context)
 
 
+q_answers = [
+    {
+        'q_id': idx,
+        'score' : f'{idx}',
+        'author': 'VadikPadik',
+        'text': 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam aliquid dignissimos repudiandae sint, porro dolores, qui quod cumque dolorem.',
+    } for idx in range(1, 4)
+]
+
+
 def answers(request, id):
     # Page with answers on current question
     question = questions[id]
     context['question'] = question
+    context['answers'] = q_answers
     return render(request, 'answers.html', context)
 
 

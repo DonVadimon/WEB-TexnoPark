@@ -73,7 +73,7 @@ Answers
 </div>
 
 <!-- Answers -->
-
+{% for ans in answers %}
 <div class="card mb-3 asnwer">
     <div class="row no-gutters">
         <div class="col-md-4">
@@ -81,7 +81,7 @@ Answers
 
             <div class="row scores">
                 <div class="post-score align-self-center">
-                    <h4>5</h4>
+                    <h4>{{ ans.score }}</h4>
                 </div>
                 <form action="#" method="POST">
                     <div class="d-flex flex-row justify-content-center answer-score">
@@ -107,15 +107,9 @@ Answers
         <div class="col">
             <div class="card-body">
                 <a href="#">
-                    <h5 class="card-title">Username</h5>
+                    <h5 class="card-title">{{ ans.author }}</h5>
                 </a>
-                <p class="card-text question-text">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam
-                    aliquid dignissimos
-                    repudiandae sint, porro dolores, qui quod cumque dolorem. Id recusandae hic a
-                    quae illo excepturi
-                    quia similique
-                </p>
+                <p class="card-text question-text">{{ ans.text }}</p>
                 <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
             </div>
 
@@ -133,4 +127,5 @@ Answers
         </div>
     </div>
 </div>
+{% endfor %}
 {% endblock content %}
