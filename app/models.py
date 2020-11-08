@@ -1,55 +1,134 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
-def user_directory_path(instance, filename):
-    """
-    Function to create user's directory path
-    """
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
+class QuestionManager(models.Manager):
+    def most_popular(self):
+        return self.all().order_by('-score')
+
+    def new(self):
+        return self.all().order_by('date_created')
+
+    def tag(self, tag):
+        return self.filter(tags__tag__iexact=tag)
 
 
-class User(models.Model):
-    login = models.CharField(max_length=256, unique=True, verbose_name='Login')
-    email = models.EmailField(
-        max_length=254, unique=True, verbose_name='Email')
-    nickname = models.CharField(max_length=256, verbose_name='NickName')
-    password = models.CharField(max_length=256)
-    avatar = models.ImageField(upload_to='users_avatars/')
-    score = models.PositiveIntegerField(default=0)
+class AnswerManager(models.Manager):
+    def most_popular(self):
+        return self.all().order_by('-score')
 
-    def __str__(self):
-        return self.nickname
 
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+class ProfileManager(models.Manager):
+    def top_ten(self):
+        return self.all().order_by('-score')[:10]
 
 
 class Question(models.Model):
-    title = models.CharField(max_length=1024, verbose_name='Заголовок')
-    text = models.TextField(verbose_name='Текст')
+    title = models.CharField(
+        max_length=1024,
+        verbose_name='Title'
+    )
+    text = models.TextField(
+        verbose_name='Text'
+    )
     date_create = models.DateField(
-        auto_now_add=True, verbose_name='Дата создания')
-    score = models.PositiveIntegerField(default=0)
-    tags = models.CharField(max_length=256, verbose_name='Tags')
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
+        auto_now_add=True,
+        verbose_name='Date of creation'
+    )
+    last_modified = models.DateField(
+        auto_now=True,
+        verbose_name='Last modified'
+    )
+    score = models.PositiveIntegerField(
+        default=0
+    )
+    tags = models.ManyToManyField('Tag')
+    author = models.ForeignKey(
+        'Profile',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Вопрос'
-        verbose_name_plural = 'Вопросы'
+        verbose_name = 'Question'
+        verbose_name_plural = 'Questions'
+
+    # Manager
+    objects = QuestionManager()
 
 
 class Answer(models.Model):
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
-    text = models.TextField(verbose_name='Текст')
-    score = models.PositiveIntegerField(default=0)
+    author = models.ForeignKey(
+        'Profile',
+        on_delete=models.CASCADE
+    )
+    text = models.TextField(
+        verbose_name='Text'
+    )
+    score = models.PositiveIntegerField(
+        default=0
+    )
 
     def __str__(self):
         return self.author
 
     class Meta:
-        verbose_name = 'Ответ'
-        verbose_name_plural = 'Ответы'
+        verbose_name = 'Answer'
+        verbose_name_plural = 'Answers'
+
+    # Manager
+    objects = AnswerManager()
+
+
+class Tag(models.Model):
+    tag = models.CharField(
+        max_length=100,
+        unique=True
+    )
+
+    class Meta:
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+    avatar = models.ImageField(
+        upload_to='profiles_avatars/',
+        blank=True
+    )
+    nickname = models.CharField(
+        max_length=128,
+        verbose_name='NickName'
+    )
+    score = models.PositiveIntegerField(
+        default=0
+    )
+
+    def __str__(self):
+        return self.nickname
+
+    class Meta:
+        verbose_name = 'Profile'
+        verbose_name_plural = 'Profiles'
+
+    # Manager
+    objects = ProfileManager()
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
