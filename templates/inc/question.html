@@ -2,7 +2,7 @@
   <div class="card mb-3 question">
       <div class="row no-gutters">
           <div class="col-md-4">
-              <img src="{% static 'img/pes_ava.png' %}" class="card-img" alt="...">
+              <img src="{{ q.author.avatar }}" class="card-img" alt="...">
               <div class="row scores">
 
                   <div class="post-score align-self-center">
@@ -53,8 +53,8 @@
                               <h5 class="mx-2">Tags:</h5>
                           </div>
                           <div class="col d-flex flex-column flex-md-row">
-                              {% for t in q.tags %}
-                              <a class="mx-2" href="{% url 'tag' t %}">{{ t }}</a>
+                              {% for t in q.tags.all %}
+                              <a class="mx-2" href="{% url 'tag' t.tag %}">{{ t }}</a>
                               {% endfor %}
                           </div>
                       </div>

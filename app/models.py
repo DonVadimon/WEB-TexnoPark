@@ -47,7 +47,8 @@ class Question(models.Model):
     tags = models.ManyToManyField('Tag')
     author = models.ForeignKey(
         'Profile',
-        on_delete=models.CASCADE
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     def __str__(self):
@@ -64,7 +65,8 @@ class Question(models.Model):
 class Answer(models.Model):
     author = models.ForeignKey(
         'Profile',
-        on_delete=models.CASCADE
+        null=True,
+        on_delete=models.SET_NULL
     )
     text = models.TextField(
         verbose_name='Text'
@@ -72,9 +74,13 @@ class Answer(models.Model):
     score = models.PositiveIntegerField(
         default=0
     )
+    question = models.ForeignKey(
+        'Question',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
-        return self.author
+        return self.author.nickname
 
     class Meta:
         verbose_name = 'Answer'
@@ -89,6 +95,9 @@ class Tag(models.Model):
         max_length=100,
         unique=True
     )
+
+    def __str__(self):
+        return self.tag
 
     class Meta:
         verbose_name = 'Tag'

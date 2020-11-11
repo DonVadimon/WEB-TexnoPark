@@ -54,7 +54,7 @@ Answers
                         <h5 class="mx-2">Tags:</h5>
                     </div>
                     <div class="col-md-10 d-flex flex-column flex-md-row justify-content-start">
-                        {% for t in question.tags %}
+                        {% for t in question.tags.all %}
                         <a class="mx-1" href="{% url 'tag' t %}">{{ t }}</a>
                         {% endfor %}
                     </div>

@@ -1,34 +1,13 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.template import RequestContext, Template
 from django.core.paginator import Paginator
 from django.views.generic import ListView
 from django.views.decorators.http import require_GET, require_POST
 from django.http import Http404
 from django.core.files.storage import FileSystemStorage
 
-questions = [
-    {
-        'id': idx,
-        'title': f'Question about dJango {idx}',
-        'text': 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam aliquid dignissimos repudiandae sint, porro dolores, qui quod cumque dolorem. Id recusandae hic a quae illo excepturi quia similique',
-        'score': f'{idx}',
-        'tags': ['dJango', 'Python'],
-    } for idx in range(0, 100)
-]
-
-tags = [
-    'dJango',
-    'Python',
-    'MySQL',
-    'Mailru',
-    'Texnopark',
-    'PHP',
-]
-
-# GLOBAL CONTEXT STARTS
-context = {}
-context['all_tags'] = tags
-# GLOBAL CONTEXT ENDS
+from .models import Profile, Question, Answer, Tag
 
 # Paginate starts
 
@@ -48,29 +27,18 @@ def paginate(request, per_page, model_list):
     return context
 # Paginate ends
 
-# Infinite Scroll Paginate starts
-# Infinite Scroll Paginate ends
-
 
 def index(request):
     # Index page
-    context.update(paginate(request, 5, questions))
+    questions = Question.objects.all()
+    context = paginate(request, 5, questions)
     return render(request, 'index.html', context)
 
 
 def ask_question(request):
     # Page for create new Question
-    return render(request, 'create_question.html', context)
+    return render(request, 'create_question.html', {})
 
-
-q_answers = [
-    {
-        'q_id': idx,
-        'score': f'{idx}',
-        'author': 'VadikPadik',
-        'text': 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt nisi numquam aliquid dignissimos repudiandae sint, porro dolores, qui quod cumque dolorem.',
-    } for idx in range(0, 14)
-]
 
 def is_ajax(request):
     """
@@ -81,13 +49,16 @@ def is_ajax(request):
     """
     return request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
 
+
 def answers(request, id):
     # Page with answers on current question
-    question = questions[id]
-    context['question'] = question
+
+    question = Question.objects.get(pk=id)
+    q_answers = Answer.objects.filter(question=question)
 
     per_page = 5
-    context.update(paginate(request, per_page, q_answers))
+    context = paginate(request, per_page, q_answers)
+    context['question'] = question
 
     if is_ajax(request):
         return render(request, 'inc/_answers.html', context)
@@ -96,28 +67,18 @@ def answers(request, id):
 
 def tag_questions(request, tag):
     # Page with question on one tag
-    tag_qs = []
-    for q in questions:
-        if tag in q['tags']:
-            tag_qs.append(q)
+    cur_tag = Tag.objects.filter(tag=tag).first()
+    tag_qs = Question.objects.filter(tags__in=[cur_tag.pk])
 
-    context.update(paginate(request, 5, tag_qs))
+    context = paginate(request, 5, tag_qs)
     context['tag'] = f'{tag}'
 
     return render(request, 'tag_questions.html', context)
 
 
-user = {
-    'login': 'Vadim',
-    'email': 'vadim@gmail.com',
-    'nickname': 'DonVadimon',
-}
-
-
 def settings(request):
     # Page with user's settings
-    context['user'] = user
-    return render(request, 'settings.html', context)
+    return render(request, 'settings.html', {})
 
 
 errors = ['Incorrect login', 'Wrong password']
@@ -125,10 +86,12 @@ errors = ['Incorrect login', 'Wrong password']
 
 def login(request):
     # Page for login in site
-    context['errors'] = errors
+    context = {
+        'errors': errors,
+    }
     return render(request, 'login.html', context)
 
 
 def register(request):
     # Page for registration
-    return render(request, 'register.html', context)
+    return render(request, 'register.html', {})

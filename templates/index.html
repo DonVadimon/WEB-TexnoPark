@@ -14,9 +14,11 @@ Index Page
 {% endblock custom_css %}
 
 {% block content %}
+<div class="container">
+  <a href=""></a>
+</div>
 <!-- Page Content -->
 <div class="questions">
-
   {% for q in page_obj %}
   {% include "inc/question.html" with q=q %}
   {% endfor %}

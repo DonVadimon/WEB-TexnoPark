@@ -4,7 +4,7 @@
     <hr>
     <ul>
         {% for t in all_tags %}
-        <li><a href="{% url 'tag' t %}" class="sidebar-link">{{ t }}</a></li>
+        <li><a href="{% url 'tag' t.tag %}" class="sidebar-link">{{ t.tag }}</a></li>
         {% endfor %}
     </ul>
     <h3 class="text-center">Best Members</h3>
