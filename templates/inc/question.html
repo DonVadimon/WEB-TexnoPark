@@ -2,7 +2,7 @@
   <div class="card mb-3 question">
       <div class="row no-gutters">
           <div class="col-md-4">
-              <img src="{{ q.author.avatar }}" class="card-img" alt="...">
+              <img src="{{ q.author.avatar.url }}" class="card-img" alt="...">
               <div class="row scores">
 
                   <div class="post-score align-self-center">
@@ -38,13 +38,13 @@
                   <p class="card-text question-text">
                       {{ q.text }}
                   </p>
-                  <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                  <p class="card-text"><small class="text-muted">Created at {{ q.date_create }}</small></p>
               </div>
 
               <div class="row d-flex flex-row justify-content-around px-3 px-md-5 pb-3">
                   <div class="col ans-link">
                       <a href="{% url 'answers' q.id %}" class="btn btn-outline-success">
-                          Answer (3)
+                          Answer ({{ q.answer_set.count }})
                       </a>
                   </div>
                   <div class="col d-flex flex-row">

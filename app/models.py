@@ -2,22 +2,35 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 
 class QuestionManager(models.Manager):
     def most_popular(self):
-        return self.all().order_by('-score')
+        return self.all().order_by('-score').prefetch_related('author', 'tags')
 
     def new(self):
-        return self.all().order_by('date_created')
+        return self.all().order_by('-date_create').prefetch_related('author', 'tags')
 
-    def tag(self, tag):
-        return self.filter(tags__tag__iexact=tag)
+    def find_by_tag(self, tag):
+        questions = self.filter(
+            tags__tag__iexact=tag).prefetch_related('author')
+        if not questions:
+            raise Http404
+        return questions
+
+    def find_by_id(self, id):
+        try:
+            question = self.get(pk=id)
+        except ObjectDoesNotExist:
+            raise Http404
+        return question
 
 
 class AnswerManager(models.Manager):
-    def most_popular(self):
-        return self.all().order_by('-score')
+    def most_popular(self, question):
+        return self.filter(question=question).order_by('-score')
 
 
 class ProfileManager(models.Manager):
@@ -77,6 +90,14 @@ class Answer(models.Model):
     question = models.ForeignKey(
         'Question',
         on_delete=models.CASCADE
+    )
+    date_create = models.DateField(
+        auto_now_add=True,
+        verbose_name='Date of creation'
+    )
+    last_modified = models.DateField(
+        auto_now=True,
+        verbose_name='Last modified'
     )
 
     def __str__(self):

@@ -30,9 +30,15 @@ def paginate(request, per_page, model_list):
 
 def index(request):
     # Index page
-    questions = Question.objects.all()
+    questions = Question.objects.new()
     context = paginate(request, 5, questions)
     return render(request, 'index.html', context)
+
+
+def hot_questions(request):
+    questions = Question.objects.most_popular()
+    context = paginate(request, 5, questions)
+    return render(request, 'hot_questions.html', context)
 
 
 def ask_question(request):
@@ -52,12 +58,10 @@ def is_ajax(request):
 
 def answers(request, id):
     # Page with answers on current question
+    question = Question.objects.find_by_id(id)
+    q_answers = Answer.objects.most_popular(question)
 
-    question = Question.objects.get(pk=id)
-    q_answers = Answer.objects.filter(question=question)
-
-    per_page = 5
-    context = paginate(request, per_page, q_answers)
+    context = paginate(request, 5, q_answers)
     context['question'] = question
 
     if is_ajax(request):
@@ -68,7 +72,9 @@ def answers(request, id):
 def tag_questions(request, tag):
     # Page with question on one tag
     cur_tag = Tag.objects.filter(tag=tag).first()
-    tag_qs = Question.objects.filter(tags__in=[cur_tag.pk])
+    if not cur_tag:
+        raise Http404
+    tag_qs = Question.objects.find_by_tag(tag)
 
     context = paginate(request, 5, tag_qs)
     context['tag'] = f'{tag}'

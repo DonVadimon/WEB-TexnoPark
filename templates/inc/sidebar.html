@@ -1,5 +1,10 @@
 <!-- Sidebar -->
 <div class="sidebar">
+    <ul>
+        <li><a class="btn btn-info" href="{% url 'home' %}">New Questions</a></li>
+        <li><a class="btn btn-info mt-3" href="{% url 'hot' %}">Hot Questions</a></li>
+    </ul>
+    <hr>
     <h3 class="text-center">Popular Tags</h3>
     <hr>
     <ul>
@@ -10,10 +15,8 @@
     <h3 class="text-center">Best Members</h3>
     <hr>
     <ul>
-        <li><a href="#" class="sidebar-link">Vadimka</a></li>
-        <li><a href="#" class="sidebar-link">Dima Zhuk</a></li>
-        <li><a href="#" class="sidebar-link">Anton Prokhorov</a></li>
-        <li><a href="#" class="sidebar-link">Sanya Lox</a></li>
-        <li><a href="#" class="sidebar-link">You</a></li>
+        {% for person in best_members %}
+        <li><a href="#" class="sidebar-link">{{ person.nickname }}</a></li>
+        {% endfor %}
     </ul>
 </div>

@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),
+    path('hot', views.hot_questions, name='hot'),
     path('ask/', views.ask_question, name='ask'),
     path('question/<int:id>/', views.answers, name='answers'),
     path('tag/<slug:tag>/', views.tag_questions, name='tag'),
@@ -33,3 +34,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    urlpatterns += staticfiles_urlpatterns()
