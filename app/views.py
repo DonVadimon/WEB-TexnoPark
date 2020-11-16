@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, Template
 from django.core.paginator import Paginator
@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.http import Http404
 from django.core.files.storage import FileSystemStorage
 
-from .models import Profile, Question, Answer, Tag, QuestionLike, QuestionDislike
+from .models import Profile, Question, Answer, Tag, QuestionLike, QuestionDislike, AnswerLike, AnswerDislike
 
 
 from django.views import View
@@ -32,6 +32,28 @@ class UpdateQuestionVote(LoginRequiredMixin, View):
         else:
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         question.update_score()
+        question.author.profile.update_score()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+class UpdateAnswerVote(LoginRequiredMixin, View):
+    login_url = '/login/'
+    redirect_field_name = 'next'
+
+    def get(self, request, *args, **kwargs):
+        answer_id = int(self.kwargs.get('answer_id', None))
+        opinion = str(self.kwargs.get('opinion', None))
+        answer = Answer.objects.find_by_id(answer_id)
+        AnswerDislike.objects.find_or_create(answer)
+        AnswerLike.objects.find_or_create(answer)
+        if opinion.lower() == 'like':
+            answer.like(request.user)
+        elif opinion.lower() == 'dislike':
+            answer.dislike(request.user)
+        else:
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        answer.update_score()
+        answer.author.profile.update_score()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
@@ -82,9 +104,9 @@ def is_ajax(request):
     return request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
 
 
-def answers(request, id):
+def answers(request, question_id):
     # Page with answers on current question
-    question = Question.objects.find_by_id(id)
+    question = Question.objects.find_by_id(question_id)
     q_answers = Answer.objects.most_popular(question)
 
     context = paginate(request, 5, q_answers)

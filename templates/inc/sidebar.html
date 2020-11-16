@@ -16,7 +16,7 @@
     <hr>
     <ul>
         {% for person in best_members %}
-        <li><a href="#" class="sidebar-link">{{ person.nickname }}</a></li>
+        <li><a href="#" class="sidebar-link">{{ person.nickname }}| Score: {{ person.score }}</a></li>
         {% endfor %}
     </ul>
 </div>

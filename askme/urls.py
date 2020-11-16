@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from app import views
 
 from django.conf import settings
@@ -25,12 +25,15 @@ urlpatterns = [
     path('', views.index, name='home'),
     path('hot', views.hot_questions, name='hot'),
     path('ask/', views.ask_question, name='ask'),
-    path('question/<int:id>/', views.answers, name='answers'),
+    path('question/<int:question_id>/', include([
+        path('', views.answers, name='answers'),
+        path('<str:opinion>', views.UpdateQuestionVote.as_view(), name='requirement_question_vote'),
+    ])),
     path('tag/<slug:tag>/', views.tag_questions, name='tag'),
     path('settings/', views.settings, name='settings'),
     path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
-    path('requirement/<int:question_id>/<str:opinion>', views.UpdateQuestionVote.as_view(), name='requirement_question_vote'),
+    path('requirement/<int:answer_id>/<str:opinion>', views.UpdateAnswerVote.as_view(), name='requirement_answer_vote'),
 ]
 
 if settings.DEBUG:
