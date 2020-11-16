@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, Template
 from django.core.paginator import Paginator
 from django.views.generic import ListView
@@ -7,7 +7,33 @@ from django.views.decorators.http import require_GET, require_POST
 from django.http import Http404
 from django.core.files.storage import FileSystemStorage
 
-from .models import Profile, Question, Answer, Tag
+from .models import Profile, Question, Answer, Tag, QuestionLike, QuestionDislike
+
+
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
+
+
+class UpdateQuestionVote(LoginRequiredMixin, View):
+    login_url = '/login/'
+    redirect_field_name = 'next'
+
+    def get(self, request, *args, **kwargs):
+        question_id = int(self.kwargs.get('question_id', None))
+        opinion = str(self.kwargs.get('opinion', None))
+        question = Question.objects.find_by_id(question_id)
+        QuestionDislike.objects.find_or_create(question)
+        QuestionLike.objects.find_or_create(question)
+        if opinion.lower() == 'like':
+            question.like(request.user)
+        elif opinion.lower() == 'dislike':
+            question.dislike(request.user)
+        else:
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        question.update_score()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 
 # Paginate starts
 

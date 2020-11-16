@@ -38,6 +38,70 @@ class ProfileManager(models.Manager):
         return self.all().order_by('-score')[:10]
 
 
+class QuestionLikeManager(models.Manager):
+    def find_or_create(self, question):
+        try:
+            question.likes
+        except Question.likes.RelatedObjectDoesNotExist as identifier:
+            self.create(question=question)
+        return True
+
+
+class QuestionDislikeManager(models.Manager):
+    def find_or_create(self, question):
+        try:
+            question.dislikes
+        except Question.dislikes.RelatedObjectDoesNotExist as identifier:
+            self.create(question=question)
+        return True
+
+
+class QuestionLike(models.Model):
+    question = models.OneToOneField(
+        'Question',
+        related_name='likes',
+        on_delete=models.CASCADE
+    )
+    users = models.ManyToManyField(
+        User,
+        related_name='requirement_question_likes'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return str(self.question.title)
+
+    objects = QuestionLikeManager()
+
+
+class QuestionDislike(models.Model):
+    question = models.OneToOneField(
+        'Question',
+        related_name='dislikes',
+        on_delete=models.CASCADE
+    )
+    users = models.ManyToManyField(
+        User,
+        related_name='requirement_question_dislikes'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return str(self.question.title)
+
+    objects = QuestionDislikeManager()
+
+
 class Question(models.Model):
     title = models.CharField(
         max_length=1024,
@@ -54,14 +118,14 @@ class Question(models.Model):
         auto_now=True,
         verbose_name='Last modified'
     )
-    score = models.PositiveIntegerField(
-        default=0
-    )
     tags = models.ManyToManyField('Tag')
     author = models.ForeignKey(
-        'Profile',
+        User,
         null=True,
         on_delete=models.SET_NULL
+    )
+    score = models.IntegerField(
+        default=0
     )
 
     def __str__(self):
@@ -74,10 +138,37 @@ class Question(models.Model):
     # Manager
     objects = QuestionManager()
 
+    def get_total_likes(self):
+        return self.likes.users.count()
+
+    def get_total_dislikes(self):
+        return self.dislikes.users.count()
+
+    def like(self, user):
+        if user in self.likes.users.all():
+                self.likes.users.remove(user)
+        else:
+            self.likes.users.add(user)
+            self.dislikes.users.remove(user)
+        return True
+    
+    def dislike(self, user):
+        if user in self.dislikes.users.all():
+            self.dislikes.users.remove(user)
+        else:
+            self.dislikes.users.add(user)
+            self.likes.users.remove(user)
+        return True
+
+    def update_score(self):
+        self.score = int(self.get_total_likes()) - int(self.get_total_dislikes())
+        self.save(update_fields=['score'])
+        return True
+
 
 class Answer(models.Model):
     author = models.ForeignKey(
-        'Profile',
+        User,
         null=True,
         on_delete=models.SET_NULL
     )
@@ -128,7 +219,8 @@ class Tag(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='profile'
     )
     avatar = models.ImageField(
         upload_to='profiles_avatars/',

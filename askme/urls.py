@@ -30,6 +30,7 @@ urlpatterns = [
     path('settings/', views.settings, name='settings'),
     path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
+    path('requirement/<int:question_id>/<str:opinion>', views.UpdateQuestionVote.as_view(), name='requirement_question_vote'),
 ]
 
 if settings.DEBUG:
