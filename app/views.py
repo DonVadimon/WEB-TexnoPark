@@ -6,13 +6,10 @@ from django.views.generic import ListView
 from django.views.decorators.http import require_GET, require_POST
 from django.http import Http404
 from django.core.files.storage import FileSystemStorage
-
-from .models import Profile, Question, Answer, Tag, QuestionLike, QuestionDislike, AnswerLike, AnswerDislike
-
-
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
+from django.db.models import Sum
+from .models import Profile, Question, Answer, Tag, QuestionVote, AnswerVote
 
 
 class UpdateQuestionVote(LoginRequiredMixin, View):
@@ -23,12 +20,11 @@ class UpdateQuestionVote(LoginRequiredMixin, View):
         question_id = int(self.kwargs.get('question_id', None))
         opinion = str(self.kwargs.get('opinion', None))
         question = Question.objects.find_by_id(question_id)
-        QuestionDislike.objects.find_or_create(question)
-        QuestionLike.objects.find_or_create(question)
+        vote = QuestionVote.objects.find_or_create(question, request.user)
         if opinion.lower() == 'like':
-            question.like(request.user)
+            vote.like()
         elif opinion.lower() == 'dislike':
-            question.dislike(request.user)
+            vote.dislike()
         else:
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         question.update_score()
@@ -44,12 +40,11 @@ class UpdateAnswerVote(LoginRequiredMixin, View):
         answer_id = int(self.kwargs.get('answer_id', None))
         opinion = str(self.kwargs.get('opinion', None))
         answer = Answer.objects.find_by_id(answer_id)
-        AnswerDislike.objects.find_or_create(answer)
-        AnswerLike.objects.find_or_create(answer)
+        vote = AnswerVote.objects.find_or_create(answer, request.user)
         if opinion.lower() == 'like':
-            answer.like(request.user)
+            vote.like()
         elif opinion.lower() == 'dislike':
-            answer.dislike(request.user)
+            vote.dislike()
         else:
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         answer.update_score()

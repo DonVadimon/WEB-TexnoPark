@@ -7,34 +7,122 @@ from django.http import Http404
 from django.db.models import Sum
 
 
+# =============================== NEW VOTES STRATS ===============================
 class VoteInterface():
-    def get_total_likes(self):
-        return self.likes.users.count()
-
-    def get_total_dislikes(self):
-        return self.dislikes.users.count()
-
-    def like(self, user):
-        if user in self.likes.users.all():
-            self.likes.users.remove(user)
+    def like(self):
+        if self.vote == self.LIKE:
+            self.vote = self.UNVOTED
         else:
-            self.likes.users.add(user)
-            self.dislikes.users.remove(user)
+            self.vote = self.LIKE
+        self.save(update_fields=['vote'])
         return True
 
-    def dislike(self, user):
-        if user in self.dislikes.users.all():
-            self.dislikes.users.remove(user)
+    def dislike(self):
+        if self.vote == self.DISLIKE:
+            self.vote = self.UNVOTED
         else:
-            self.dislikes.users.add(user)
-            self.likes.users.remove(user)
+            self.vote = self.DISLIKE
+        self.save(update_fields=['vote'])
         return True
 
-    def update_score(self):
-        self.score = int(self.get_total_likes()) - \
-            int(self.get_total_dislikes())
-        self.save(update_fields=['score'])
-        return True
+
+class QuestionVoteManager(models.Manager):
+    def find_or_create(self, question, user):
+        try:
+            vote = self.get(question=question, user=user)
+        except ObjectDoesNotExist as identifier:
+            vote = self.create(question=question, user=user)
+        return vote
+
+
+class AnswerVoteManager(models.Manager):
+    def find_or_create(self, answer, user):
+        try:
+            vote = self.get(answer=answer, user=user)
+        except ObjectDoesNotExist as identifier:
+            vote = self.create(answer=answer, user=user)
+        return vote
+
+
+class QuestionVote(models.Model, VoteInterface):
+    LIKE = 1
+    DISLIKE = -1
+    UNVOTED = 0
+    VOTES = [
+        (LIKE, 'Like'),
+        (DISLIKE, 'Dislike'),
+        (UNVOTED, 'Unvoted'),
+    ]
+
+    vote = models.SmallIntegerField(
+        choices=VOTES,
+        default=UNVOTED,
+        verbose_name='Vote'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='q_votes'
+    )
+    question = models.ForeignKey(
+        'Question',
+        on_delete=models.CASCADE,
+        related_name='estimates'
+    )
+
+    objects = QuestionVoteManager()
+
+    def __str__(self):
+        return f'{self.question.title} Vote: {self.vote}'
+
+    class Meta():
+        unique_together = [
+            'user',
+            'question',
+        ]
+
+
+class AnswerVote(models.Model, VoteInterface):
+    LIKE = 1
+    DISLIKE = -1
+    UNVOTED = 0
+    VOTES = [
+        (LIKE, 'Like'),
+        (DISLIKE, 'Dislike'),
+        (UNVOTED, 'Unvoted'),
+    ]
+
+    vote = models.SmallIntegerField(
+        choices=VOTES,
+        default=UNVOTED,
+        verbose_name='Vote'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='a_votes'
+    )
+    answer = models.ForeignKey(
+        'Answer',
+        on_delete=models.CASCADE,
+        related_name='estimates'
+    )
+
+    objects = AnswerVoteManager()
+
+    def __str__(self):
+        return f'{self.answer.__str__()} Vote: {self.vote}'
+
+    class Meta():
+        unique_together = [
+            'user',
+            'answer',
+        ]
+
+
+# =============================== NEW VOTES ENDS ===============================
 
 
 class QuestionManager(models.Manager):
@@ -76,89 +164,7 @@ class ProfileManager(models.Manager):
         return self.all().order_by('-score')[:10]
 
 
-class QuestionLikeManager(models.Manager):
-    def find_or_create(self, question):
-        try:
-            question.likes
-        except Question.likes.RelatedObjectDoesNotExist as identifier:
-            self.create(question=question)
-        return True
-
-
-class QuestionDislikeManager(models.Manager):
-    def find_or_create(self, question):
-        try:
-            question.dislikes
-        except Question.dislikes.RelatedObjectDoesNotExist as identifier:
-            self.create(question=question)
-        return True
-
-
-class AnswerLikeManager(models.Manager):
-    def find_or_create(self, answer):
-        try:
-            answer.likes
-        except Answer.likes.RelatedObjectDoesNotExist as identifier:
-            self.create(answer=answer)
-        return True
-
-
-class AnswerDislikeManager(models.Manager):
-    def find_or_create(self, answer):
-        try:
-            answer.dislikes
-        except Answer.dislikes.RelatedObjectDoesNotExist as identifier:
-            self.create(answer=answer)
-        return True
-
-
-class QuestionLike(models.Model):
-    question = models.OneToOneField(
-        'Question',
-        related_name='likes',
-        on_delete=models.CASCADE
-    )
-    users = models.ManyToManyField(
-        User,
-        related_name='requirement_question_likes'
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
-
-    def __str__(self):
-        return str(self.question.title)
-
-    objects = QuestionLikeManager()
-
-
-class QuestionDislike(models.Model):
-    question = models.OneToOneField(
-        'Question',
-        related_name='dislikes',
-        on_delete=models.CASCADE
-    )
-    users = models.ManyToManyField(
-        User,
-        related_name='requirement_question_dislikes'
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
-
-    def __str__(self):
-        return str(self.question.title)
-
-    objects = QuestionDislikeManager()
-
-
-class Question(models.Model, VoteInterface):
+class Question(models.Model):
     title = models.CharField(
         max_length=1024,
         verbose_name='Title'
@@ -195,54 +201,14 @@ class Question(models.Model, VoteInterface):
     # Manager
     objects = QuestionManager()
 
-
-class AnswerLike(models.Model):
-    answer = models.OneToOneField(
-        'Answer',
-        related_name='likes',
-        on_delete=models.CASCADE
-    )
-    users = models.ManyToManyField(
-        User,
-        related_name='requirement_answer_likes'
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
-
-    def __str__(self):
-        return str(self.answer.text[:30])
-
-    objects = AnswerLikeManager()
+    def update_score(self):
+        vote_sum = self.estimates.aggregate(Sum('vote'))
+        self.score = vote_sum['vote__sum']
+        self.save(update_fields=['score'])
+        return True
 
 
-class AnswerDislike(models.Model):
-    answer = models.OneToOneField(
-        'Answer',
-        related_name='dislikes',
-        on_delete=models.CASCADE
-    )
-    users = models.ManyToManyField(
-        User,
-        related_name='requirement_answer_dislikes'
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
-
-    def __str__(self):
-        return str(self.answer.text[:30])
-
-    objects = AnswerDislikeManager()
-
-
-class Answer(models.Model, VoteInterface):
+class Answer(models.Model):
     author = models.ForeignKey(
         User,
         null=True,
@@ -278,6 +244,12 @@ class Answer(models.Model, VoteInterface):
     # Manager
     objects = AnswerManager()
 
+    def update_score(self):
+        vote_sum = self.estimates.aggregate(Sum('vote'))
+        self.score = vote_sum['vote__sum']
+        self.save(update_fields=['score'])
+        return True
+
 
 class Tag(models.Model):
     tag = models.CharField(
@@ -310,7 +282,7 @@ class Profile(models.Model):
     score = models.IntegerField(
         default=0
     )
-    
+
     def __str__(self):
         return self.nickname
 
@@ -322,7 +294,7 @@ class Profile(models.Model):
     objects = ProfileManager()
 
     def get_score_from_questions(self):
-        questions_scores = self.user.questions.all().aggregate(Sum('score'))
+        questions_scores = self.user.questions.aggregate(Sum('score'))
         return questions_scores['score__sum']
 
     def get_score_from_answers(self):
