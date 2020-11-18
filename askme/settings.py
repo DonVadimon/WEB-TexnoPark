@@ -25,7 +25,7 @@ SECRET_KEY = 'gp71bkadhyu(o8egu@zz(2g)ny%4b4)fxe0ijd7v%2!4ic8kg0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -78,8 +78,10 @@ WSGI_APPLICATION = 'askme.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'read_default_file': '/etc/mysql/my.cnf',
+        },
     }
 }
 
@@ -126,7 +128,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-#Media path
+# Media path
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'

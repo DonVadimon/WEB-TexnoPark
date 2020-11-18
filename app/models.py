@@ -310,7 +310,7 @@ class Profile(models.Model):
     score = models.IntegerField(
         default=0
     )
-
+    
     def __str__(self):
         return self.nickname
 
