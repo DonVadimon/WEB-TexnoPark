@@ -124,6 +124,7 @@ class AnswerVote(models.Model, VoteInterface):
 
 # =============================== NEW VOTES ENDS ===============================
 
+# =============================== MANAGERS STARTS ===============================
 
 class QuestionManager(models.Manager):
     def most_popular(self):
@@ -163,6 +164,7 @@ class ProfileManager(models.Manager):
     def top_ten(self):
         return self.all().order_by('-score')[:10]
 
+# =============================== MANAGERS ENDS ===============================
 
 class Question(models.Model):
     title = models.CharField(

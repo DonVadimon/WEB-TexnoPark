@@ -1,40 +1,29 @@
-  {% load static %}
-  <div class="card mb-3 question">
-      <div class="row no-gutters">
+<div class="card mb-3 question">
+    <div class="row no-gutters">
 
-          {% include 'inc/q_score.html' with q=q %}
+        {% include 'inc/q_score.html' with q=q %}
 
-          <div class="col">
-              <div class="card-body">
-                  <a href="{% url 'answers' q.pk %}">
-                      <h5 class="card-title">{{ q.title }}</h5>
-                  </a>
-                  <p class="card-text question-text">
-                      {{ q.text }}
-                  </p>
-                  <p class="card-text"><small class="text-muted">Created at {{ q.date_create }}</small></p>
-              </div>
+        <div class="col">
+            <div class="card-body">
+                <a href="{% url 'answers' q.pk %}">
+                    <h5 class="card-title">{{ q.title }}</h5>
+                </a>
+                <p class="card-text question-text">
+                    {{ q.text }}
+                </p>
+                <p class="card-text"><small class="text-muted">Created at {{ q.date_create }}</small></p>
+                <h5>Tags:</h5>
 
-              <div class="row d-flex flex-row justify-content-around px-3 px-md-5 pb-3">
-                  <div class="col ans-link">
-                      <a href="{% url 'answers' q.pk %}" class="btn btn-outline-success">
-                          Answer ({{ q.answer_set.count }})
-                      </a>
-                  </div>
-                  <div class="col d-flex flex-row">
-                      <div class="row">
-                          <div class="col">
-                              <h5 class="mx-2">Tags:</h5>
-                          </div>
-                          <div class="col d-flex flex-column flex-md-row">
-                              {% for t in q.tags.all %}
-                              <a class="mx-2" href="{% url 'tag' t.tag %}">{{ t }}</a>
-                              {% endfor %}
-                          </div>
-                      </div>
-                  </div>
-              </div>
+                {% for t in q.tags.all %}
+                <a href="{% url 'tag' t.tag %}" class="card-link">{{ t }}</a>
+                {% endfor %}
 
-          </div>
-      </div>
-  </div>
+                <div class="mt-3 text-center">
+                    <a href="{% url 'answers' q.pk %}" class="btn btn-outline-success">
+                        Answer ({{ q.answer_set.count }})
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

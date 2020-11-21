@@ -1,7 +1,12 @@
 {% load votes_tags %}
+{% load static %}
 
 <div class="col-md-4">
-    <img src="{{ q.author.profile.avatar.url }}" class="card-img" alt="...">
+    {% if q.author.profile.avatar %}
+    <img src="{{ q.author.profile.avatar.url }}" class="card-img" alt="#">
+    {% else %}
+    <img src="{% static 'img/pes_ava.png' %}" alt="#" class="card-img">
+    {% endif %}
     <div class="row scores">
 
         <div class="post-score align-self-center">
@@ -11,9 +16,9 @@
 
         <div class="d-flex flex-row justify-content-center answer-score">
             <div class="btn-group mt-1 ml-1 d-flex align-self-center" role="group" aria-label="Basic example">
-                
+
                 {% q_liked_by user q as liked %}
-                
+
                 {% if liked %}
                 <!-- already liked-->
                 <a href="{% url 'requirement_question_vote' question_id=q.pk opinion='like' %}" class="btn btn-info">
