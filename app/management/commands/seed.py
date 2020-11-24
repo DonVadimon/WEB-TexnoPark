@@ -36,9 +36,10 @@ class Command(BaseCommand):
             u = User.objects.create(
                 is_superuser=False,
                 username=profile['username'],
-                password='password',
                 email=profile['mail']
             )
+            u.set_password('password')
+            u.save(update_fields=['password'])
             new_profile = Profile.objects.get(pk=u.pk)
             new_profile.nickname = profile['username']
             new_profile.save(update_fields=['nickname'])

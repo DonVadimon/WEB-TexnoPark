@@ -22,7 +22,7 @@
 
             {% if user.is_active %}
             <li class="nav-item">
-                <img class="avatar" src="{{ user.profile.avatar.url }}" alt="{{ user.profile.nickname }}">
+                <img id="avatar" src="{{ user.profile.avatar.url }}" alt="{{ user.profile.nickname }}">
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
