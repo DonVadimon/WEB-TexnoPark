@@ -9,7 +9,7 @@
                     <h5 class="card-title">{{ q.title }}</h5>
                 </a>
                 <p class="card-text question-text">
-                    {{ q.text }}
+                    {{ q.text|linebreaksbr }}
                 </p>
                 <p class="card-text"><small class="text-muted">Created at {{ q.date_create }}</small></p>
                 <h5>Tags:</h5>

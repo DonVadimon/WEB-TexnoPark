@@ -5,7 +5,7 @@
             {% include 'inc/ans_score.html' with ans=ans %}
 
             <div class="col">
-                <div class="card-body">
+                <div class="card-body" id="{{ ans.pk }}">
                     <a href="#">
                         <h5 class="card-title">{{ ans.author }}</h5>
                     </a>

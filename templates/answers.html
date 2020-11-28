@@ -1,6 +1,7 @@
 {% extends 'inc/base.html' %}
 
 {% load static %}
+{% load bootstrap4 %}
 
 {% block page_title %}
 Answers
@@ -21,7 +22,7 @@ Answers
 
             <div class="col-md-8">
                 <h1 class="display-4">{{ question.title }}</h1>
-                <p class="lead">{{ question.text }}</p>
+                <p class="lead">{{ question.text|linebreaksbr }}</p>
                 <hr class="my-4">
                 <div class="row d-flex flex-row mb-3">
                     <div class="col-md-2">
@@ -39,13 +40,15 @@ Answers
             </div>
         </div>
     </div>
-    <form action="#" method="post" class="mt-3">
-        <div class="form-group">
-            <textarea class="form-control" name="question-body" id="question-body" rows="10"
-                placeholder="Enter your answer here..."></textarea>
-        </div>
+
+    <form action="{% url 'answers' question.pk %}" method="POST" class="mt-3" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form show_label=False %}
+        {% buttons %}
         <button type="submit" class="btn btn-primary">Answer</button>
+        {% endbuttons %}
     </form>
+
 </div>
 
 <!-- Answers -->

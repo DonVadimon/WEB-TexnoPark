@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, Template
 from django.core.paginator import Paginator
@@ -9,6 +9,13 @@ from django.core.files.storage import FileSystemStorage
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
+
+from django.contrib import auth
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from .forms import QuestionForm, AnswerForm, LoginForm, RegistrationForm, UserSettingsForm, ProfileSettingsForm
+
+
 from .models import Profile, Question, Answer, Tag, QuestionVote, AnswerVote
 
 
@@ -84,9 +91,17 @@ def hot_questions(request):
     return render(request, 'hot_questions.html', context)
 
 
+@login_required
 def ask_question(request):
     # Page for create new Question
-    return render(request, 'create_question.html', {})
+    if request.method == 'GET':
+        form = QuestionForm()
+    else:
+        form = QuestionForm(data=request.POST)
+        if form.is_valid():
+            question = form.save(request=request)
+            return redirect(reverse('answers', kwargs={'question_id': question.pk}))
+    return render(request, 'create_question.html', {'form': form})
 
 
 def is_ajax(request):
@@ -103,10 +118,19 @@ def answers(request, question_id):
     # Page with answers on current question
     question = Question.objects.find_by_id(question_id)
     q_answers = Answer.objects.most_popular(question)
-
     context = paginate(request, 5, q_answers)
     context['question'] = question
-
+    if request.method == 'GET':
+        form = AnswerForm()
+    else:
+        if request.user.is_authenticated:
+            form = AnswerForm(data=request.POST)
+            if form.is_valid():
+                answer = form.save(request=request, question_id=question_id)
+                return redirect(reverse('answers', kwargs={'question_id': question_id}) + f'#{answer.pk}')
+        else:
+            return redirect(reverse('login') + f'?next={request.path}')
+    context['form'] = form
     if is_ajax(request):
         return render(request, 'inc/_answers.html', context)
     return render(request, 'answers.html', context)
@@ -125,22 +149,87 @@ def tag_questions(request, tag):
     return render(request, 'tag_questions.html', context)
 
 
+@login_required
 def settings(request):
-    # Page with user's settings
-    return render(request, 'settings.html', {})
+    if request.method == 'GET':
+        user_form = UserSettingsForm(instance=request.user)
+        profile_form = ProfileSettingsForm(instance=request.user.profile)
+    else:
+        user_form = UserSettingsForm(
+            data=request.POST,
+            instance=request.user
+        )
+        profile_form = ProfileSettingsForm(
+            data=request.POST,
+            instance=request.user.profile
+        )
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save()
+            profile_form.save(user=user, FILES=request.FILES)
 
-
-errors = ['Incorrect login', 'Wrong password']
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+    return render(request, 'settings.html', context)
 
 
 def login(request):
-    # Page for login in site
+    # Page for login on site
+    if request.GET.get('next'):
+        next_url = request.GET.get('next')
+    elif request.session.get('next'):
+        next_url = request.session.get('next')
+    else:
+        next_url = ''
+
+    if request.method == 'GET':
+        form = LoginForm()
+    else:
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            user = auth.authenticate(request, **form.cleaned_data)
+            if user is not None:
+                auth.login(request, user)
+                if next_url != '':
+                    return redirect(next_url)
+                else:
+                    return redirect(reverse('home'))
+
+    if request.session.get('next') != next_url:
+        request.session['next'] = next_url
+
     context = {
-        'errors': errors,
+        'form': form,
     }
     return render(request, 'login.html', context)
 
 
+@login_required
+def logout(request):
+    auth.logout(request)
+    if 'next' in request.GET:
+        return redirect(request.GET['next'])
+    else:
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
 def register(request):
     # Page for registration
-    return render(request, 'register.html', {})
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(FILES=request.FILES)
+            raw_password = form.cleaned_data.get('password1')
+            user = auth.authenticate(
+                username=user.username,
+                password=raw_password
+            )
+            if user is not None:
+                auth.login(request, user)
+            else:
+                return redirect(reverse('signup'))
+            return redirect(reverse('home'))
+    else:
+        form = RegistrationForm()
+    return render(request, 'register.html', {'form': form})

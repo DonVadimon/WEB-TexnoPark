@@ -32,8 +32,9 @@ urlpatterns = [
     path('tag/<slug:tag>/', views.tag_questions, name='tag'),
     path('settings/', views.settings, name='settings'),
     path('login/', views.login, name='login'),
-    path('register/', views.register, name='register'),
-    path('requirement/<int:answer_id>/<str:opinion>', views.UpdateAnswerVote.as_view(), name='requirement_answer_vote'),
+    path('logout/', views.logout, name='logout'),
+    path('signup/', views.register, name='register'),
+    path('answer/<int:answer_id>/<str:opinion>', views.UpdateAnswerVote.as_view(), name='requirement_answer_vote'),
 ]
 
 if settings.DEBUG:
