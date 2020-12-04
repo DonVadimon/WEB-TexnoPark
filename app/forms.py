@@ -9,11 +9,15 @@ from django.core.exceptions import ValidationError
 
 class QuestionForm(forms.ModelForm):
 
-    def save(self, request):
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(QuestionForm, self).__init__(*args, **kwargs)
+
+    def save(self):
         question = super(QuestionForm, self).save(commit=False)
-        question.author = request.user
+        question.author = self.request.user
         question.save()
-        question.tags.set(request.POST.getlist('tags'))
+        question.tags.set(self.request.POST.getlist('tags'))
         return question
 
     def clean(self):
@@ -32,6 +36,13 @@ class QuestionForm(forms.ModelForm):
                 'Start your text with letter'
             )
 
+        raw_tags = self.request.getlist('tags')
+        if len(raw_tags) > 10:
+            self.add_error(
+                'tags',
+                'You can choose no more than 10 tags'
+            )
+
     class Meta:
         model = Question
         fields = ('title', 'text', 'tags')
@@ -40,10 +51,15 @@ class QuestionForm(forms.ModelForm):
 class AnswerForm(forms.ModelForm):
     text = forms.CharField(widget=forms.Textarea, required=True)
 
-    def save(self, request, question_id):
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        self.question_id = kwargs.pop('question_id', None)
+        super(AnswerForm, self).__init__(*args, **kwargs)
+
+    def save(self):
         answer = super(AnswerForm, self).save(commit=False)
-        answer.author = request.user
-        answer.question = Question.objects.find_by_id(question_id)
+        answer.author = self.request.user
+        answer.question = Question.objects.find_by_id(self.question_id)
         answer.save()
         return answer
 
@@ -76,12 +92,16 @@ class RegistrationForm(UserCreationForm):
         'style': 'display: none;',
     }))
 
-    def save(self, FILES):
+    def __init__(self, *args, **kwargs):
+        self.FILES = kwargs.pop('FILES', None)
+        super(RegistrationForm, self).__init__(*args, **kwargs)
+
+    def save(self):
         user = super(RegistrationForm, self).save()
         user.refresh_from_db()
         user.profile.nickname = self.cleaned_data.get('nickname')
-        if 'avatar' in FILES:
-            user.profile.avatar = FILES['avatar']
+        if 'avatar' in self.FILES:
+            user.profile.avatar = self.FILES['avatar']
         user.save()
         return user
 
@@ -115,11 +135,16 @@ class ProfileSettingsForm(forms.ModelForm):
         'style': 'display: none;',
     }))
 
-    def save(self, user, FILES):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.FILES = kwargs.pop('FILES', None)
+        super(ProfileSettingsForm, self).__init__(*args, **kwargs)
+
+    def save(self):
         profile = super(ProfileSettingsForm, self).save(commit=False)
-        profile.user = user
-        if 'avatar' in FILES:
-            profile.avatar = FILES['avatar']
+        profile.user = self.user
+        if 'avatar' in self.FILES:
+            profile.avatar = self.FILES['avatar']
         profile.save()
         return profile
 

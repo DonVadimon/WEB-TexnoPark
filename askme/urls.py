@@ -27,17 +27,18 @@ urlpatterns = [
     path('ask/', views.ask_question, name='ask'),
     path('question/<int:question_id>/', include([
         path('', views.answers, name='answers'),
-        path('<str:opinion>', views.UpdateQuestionVote.as_view(), name='requirement_question_vote'),
+        path('vote/', views.question_vote, name='question_vote'),
     ])),
     path('tag/<slug:tag>/', views.tag_questions, name='tag'),
     path('settings/', views.settings, name='settings'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('signup/', views.register, name='register'),
-    path('answer/<int:answer_id>/<str:opinion>', views.UpdateAnswerVote.as_view(), name='requirement_answer_vote'),
+    path('answervote/', views.answer_vote, name='answer_vote'),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += staticfiles_urlpatterns()

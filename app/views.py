@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template import RequestContext, Template
 from django.core.paginator import Paginator
 from django.views.generic import ListView
@@ -19,44 +19,56 @@ from .forms import QuestionForm, AnswerForm, LoginForm, RegistrationForm, UserSe
 from .models import Profile, Question, Answer, Tag, QuestionVote, AnswerVote
 
 
-class UpdateQuestionVote(LoginRequiredMixin, View):
-    login_url = '/login/'
-    redirect_field_name = 'next'
+@require_POST
+def question_vote(request, question_id):
+    if request.user.is_anonymous:
+        return JsonResponse({'is_anonymous': True})
+    opinion = str(request.POST.get('opinion'))
+    question = Question.objects.find_by_id(question_id)
+    vote = QuestionVote.objects.find_or_create(question, request.user)
+    if opinion.lower() == 'like':
+        vote.like()
+    elif opinion.lower() == 'dislike':
+        vote.dislike()
+    else:
+        return JsonResponse({'is_voted': False})
+    new_question_score = question.update_score()
+    question.author.profile.update_score()
 
-    def get(self, request, *args, **kwargs):
-        question_id = int(self.kwargs.get('question_id', None))
-        opinion = str(self.kwargs.get('opinion', None))
-        question = Question.objects.find_by_id(question_id)
-        vote = QuestionVote.objects.find_or_create(question, request.user)
-        if opinion.lower() == 'like':
-            vote.like()
-        elif opinion.lower() == 'dislike':
-            vote.dislike()
-        else:
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-        question.update_score()
-        question.author.profile.update_score()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    data = {
+        'is_anonymous': False,
+        'is_voted': True,
+        'vote': vote.vote,
+        'new_obj_score': new_question_score,
+    }
+    return JsonResponse(data)
 
 
-class UpdateAnswerVote(LoginRequiredMixin, View):
-    login_url = '/login/'
-    redirect_field_name = 'next'
+@require_POST
+def answer_vote(request):
+    if request.user.is_anonymous:
+        return JsonResponse({'is_anonymous': True})
+    answer_id = int(request.POST.get('obj_id'))
+    opinion = str(request.POST.get('opinion'))
+    answer = Answer.objects.find_by_id(answer_id)
+    vote = AnswerVote.objects.find_or_create(answer, request.user)
+    if opinion.lower() == 'like':
+        vote.like()
+    elif opinion.lower() == 'dislike':
+        vote.dislike()
+    else:
+        return JsonResponse({'is_voted': False})
+    new_answer_score = answer.update_score()
+    answer.author.profile.update_score()
 
-    def get(self, request, *args, **kwargs):
-        answer_id = int(self.kwargs.get('answer_id', None))
-        opinion = str(self.kwargs.get('opinion', None))
-        answer = Answer.objects.find_by_id(answer_id)
-        vote = AnswerVote.objects.find_or_create(answer, request.user)
-        if opinion.lower() == 'like':
-            vote.like()
-        elif opinion.lower() == 'dislike':
-            vote.dislike()
-        else:
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-        answer.update_score()
-        answer.author.profile.update_score()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    data = {
+        'is_anonymous': False,
+        'is_voted': True,
+        'vote': vote.vote,
+        'new_obj_score': new_answer_score,
+    }
+
+    return JsonResponse(data)
 
 
 # Paginate starts
@@ -97,9 +109,9 @@ def ask_question(request):
     if request.method == 'GET':
         form = QuestionForm()
     else:
-        form = QuestionForm(data=request.POST)
+        form = QuestionForm(data=request.POST, request=request)
         if form.is_valid():
-            question = form.save(request=request)
+            question = form.save()
             return redirect(reverse('answers', kwargs={'question_id': question.pk}))
     return render(request, 'create_question.html', {'form': form})
 
@@ -124,9 +136,10 @@ def answers(request, question_id):
         form = AnswerForm()
     else:
         if request.user.is_authenticated:
-            form = AnswerForm(data=request.POST)
+            form = AnswerForm(data=request.POST,
+                              request=request, question_id=question_id)
             if form.is_valid():
-                answer = form.save(request=request, question_id=question_id)
+                answer = form.save()
                 return redirect(reverse('answers', kwargs={'question_id': question_id}) + f'#{answer.pk}')
         else:
             return redirect(reverse('login') + f'?next={request.path}')
@@ -161,11 +174,13 @@ def settings(request):
         )
         profile_form = ProfileSettingsForm(
             data=request.POST,
-            instance=request.user.profile
+            instance=request.user.profile,
+            user=request.user,
+            FILES=request.FILES
         )
         if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save()
-            profile_form.save(user=user, FILES=request.FILES)
+            profile_form.save()
 
     context = {
         'user_form': user_form,
@@ -216,10 +231,12 @@ def logout(request):
 
 def register(request):
     # Page for registration
+    if request.user.is_authenticated:
+        raise Http404
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = RegistrationForm(data=request.POST, FILES=request.FILES)
         if form.is_valid():
-            user = form.save(FILES=request.FILES)
+            user = form.save()
             raw_password = form.cleaned_data.get('password1')
             user = auth.authenticate(
                 username=user.username,

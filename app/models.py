@@ -207,7 +207,7 @@ class Question(models.Model):
         vote_sum = self.estimates.aggregate(Sum('vote'))
         self.score = vote_sum['vote__sum']
         self.save(update_fields=['score'])
-        return True
+        return self.score
 
 
 class Answer(models.Model):
@@ -250,7 +250,7 @@ class Answer(models.Model):
         vote_sum = self.estimates.aggregate(Sum('vote'))
         self.score = vote_sum['vote__sum']
         self.save(update_fields=['score'])
-        return True
+        return self.score
 
 
 class Tag(models.Model):
@@ -304,9 +304,9 @@ class Profile(models.Model):
         return answers_scores['score__sum']
 
     def update_score(self):
-        self.score = self.get_score_from_questions() + self.get_score_from_answers()
+        self.score = int(self.get_score_from_questions()) + int(self.get_score_from_answers())
         self.save(update_fields=['score'])
-        return True
+        return self.score
 
 
 @receiver(post_save, sender=User)
