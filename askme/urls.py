@@ -35,6 +35,7 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('signup/', views.register, name='register'),
     path('answervote/', views.answer_vote, name='answer_vote'),
+    path('iscorrect/', views.iscorrect, name='iscorrect'),
 ]
 
 if settings.DEBUG:

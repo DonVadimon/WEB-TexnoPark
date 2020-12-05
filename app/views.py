@@ -20,6 +20,34 @@ from .models import Profile, Question, Answer, Tag, QuestionVote, AnswerVote
 
 
 @require_POST
+def iscorrect(request):
+    if request.user.is_anonymous:
+        return JsonResponse({'is_anonymous': True})
+
+    ansid = int(request.POST.get('ansid'))
+    answer = Answer.objects.find_by_id(ansid)
+
+    if answer.is_correct:
+        answer.is_correct = False
+        if answer.author is not None:
+            answer.author.profile.score -= 1
+            answer.author.profile.save(update_fields=['score'])
+    else:
+        answer.is_correct = True
+        if answer.author is not None:
+            answer.author.profile.score += 1
+            answer.author.profile.save(update_fields=['score'])
+
+    answer.save(update_fields=['is_correct'])
+
+    data = {
+        'is_anonymous': False,
+        'is_correct': answer.is_correct,
+    }
+    return JsonResponse(data)
+
+
+@require_POST
 def question_vote(request, question_id):
     if request.user.is_anonymous:
         return JsonResponse({'is_anonymous': True})

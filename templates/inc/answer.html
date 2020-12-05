@@ -1,5 +1,5 @@
     {% load static %}
-    <div class="card mb-3 asnwer">
+    <div class="card mb-3 asnwer {% if ans.is_correct %}correct{% endif %} " id="ans{{ ans.pk }}">
         <div class="row no-gutters">
 
             {% include 'inc/ans_score.html' with ans=ans %}
@@ -21,12 +21,13 @@
 
                 <div class="row d-flex flex-row justify-content-around px-5">
                     <div class="col">
+                        {% if user == ans.question.author %}
                         <div class="form-group form-check">
-                            <form action="#" method="POST">
-                                <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                                <label class="form-check-label" for="exampleCheck1">Correct!</label>
-                            </form>
+                            <input type="checkbox" {% if ans.is_correct %}checked{% endif %}
+                                class="form-check-input js-correct" id="anscheck{{ ans.pk }}" data-ansid="{{ ans.pk }}">
+                            <label class="form-check-label" for="anscheck{{ ans.pk }}">Correct!</label>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 

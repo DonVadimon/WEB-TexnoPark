@@ -150,7 +150,7 @@ class QuestionManager(models.Manager):
 
 class AnswerManager(models.Manager):
     def most_popular(self, question):
-        return self.filter(question=question).order_by('-score')
+        return self.filter(question=question).order_by('-is_correct', '-score')
 
     def find_by_id(self, id):
         try:
@@ -226,6 +226,10 @@ class Answer(models.Model):
     question = models.ForeignKey(
         'Question',
         on_delete=models.CASCADE
+    )
+    is_correct = models.BooleanField(
+        verbose_name='Is Correct',
+        default=False
     )
     date_create = models.DateField(
         auto_now_add=True,
@@ -304,7 +308,7 @@ class Profile(models.Model):
         return answers_scores['score__sum']
 
     def update_score(self):
-        self.score = int(self.get_score_from_questions()) + int(self.get_score_from_answers())
+        self.score = self.get_score_from_questions() + self.get_score_from_answers()
         self.save(update_fields=['score'])
         return self.score
 
